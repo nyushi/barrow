@@ -185,7 +185,7 @@ func (r *Rule) install(fi *FileInfo, dryrun bool) (bool, error) {
 	if fi.IsDir {
 		differ, err := HasDirDiff(fi.Path, fi.Owner, fi.Group, fi.Mode)
 		if err != nil {
-			return changed, err
+			return changed, fmt.Errorf("error at dir diff: %s", err)
 		}
 		if differ {
 			fmt.Println(fi.String())
@@ -193,13 +193,16 @@ func (r *Rule) install(fi *FileInfo, dryrun bool) (bool, error) {
 		}
 		if !dryrun && differ {
 			if err := install.InstallDir(fi.Path, &opt); err != nil {
-				return changed, err
+				return changed, fmt.Errorf("error at directory installation: %s", err)
 			}
 		}
 	} else {
 		differ, err := HasFileDiff(fi.SrcPath, fi.Path)
 		if err != nil {
-			return changed, err
+			if os.IsNotExist(err) {
+				return true, nil
+			}
+			return changed, fmt.Errorf("error at file diff: %s", err)
 		}
 		if differ {
 			fmt.Println(fi.String())
@@ -207,7 +210,7 @@ func (r *Rule) install(fi *FileInfo, dryrun bool) (bool, error) {
 		}
 		if !dryrun && differ {
 			if err := install.InstallFile(fi.SrcPath, fi.Path, &opt); err != nil {
-				return changed, err
+				return changed, fmt.Errorf("error at file installation: %s", err)
 			}
 		}
 	}

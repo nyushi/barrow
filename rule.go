@@ -199,10 +199,10 @@ func (r *Rule) install(fi *FileInfo, dryrun bool) (bool, error) {
 	} else {
 		differ, err := HasFileDiff(fi.SrcPath, fi.Path)
 		if err != nil {
-			if os.IsNotExist(err) {
-				return true, nil
+			if !os.IsNotExist(err) {
+				return changed, fmt.Errorf("error at file diff: %s", err)
 			}
-			return changed, fmt.Errorf("error at file diff: %s", err)
+			differ = true
 		}
 		if differ {
 			fmt.Println(fi.String())
